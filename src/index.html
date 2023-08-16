@@ -1,9 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>ANTIBES3D CESIUM</title>
+    <!-- <script src="lib/jquery-3.3.1.min.js"></script>
+    <script src="lib/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="lib/jquery-ui-1.12.1.custom/jquery-ui.css">
+    <script src="lib/cesium-1.74/Build/Cesium/Cesium.js"></script>
+    <link href="lib/cesium-1.74/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <link href="cesium-ui.css?4" rel="stylesheet"> -->
+    <!-- <style>
+    </style> -->
 </head>
 <body>
-<div id="cesiumContainer"></div>
+
+    <div id="sidenav">
+        <a href="javascript:void(0)" class="closebtn" id="closeNav">&times;</a>
+        <div id="toolbar-opt" class="toolbar">
+            <div class="row">
+                <input id="open-options" type="button" class="cesium-button" value="Options"/>
+            </div>
+        </div>
+        <div id="toolbar-adresse" class="toolbar">
+            <div class="row">
+                <form id="form-adresse">
+                    <input id="text-address" type="text" value="9 avenue des frères Oliviers"/>
+                    <input id="button-search-address" type="submit" value="🔍"/>
+                </form>
+            </div>
+            <div class="row"><h4>Outils</h4></div>
+            <div class="row">
+				<input id="checkbox-adresse-click" type="checkbox"/>
+				<label for="checkbox-adresse-click">Adresse</label>
+            </div>
+            <div class="row">
+				<input id="checkbox-tool-coords" type="checkbox"/>
+				<label for="checkbox-tool-coords">Coordonnées</label>
+            </div>
+        </div>
+        <div id="toolbar-positions" class="toolbar"></div>
+        <div id="toolbar-meteo" class="toolbar">
+            <div class="row">
+                <input id="button-meteo" type="button" class="cesium-button" value="Météo FRAME"/>
+            </div>
+        </div>
+        <div id="toolbar-layers" class="toolbar">
+            <div class="row"><h4>Imagerie terrain</h4></div>
+            <div class="row">
+                <input id="open-imagerylayers" type="button" class="cesium-button" value="Gérer les couches"/>
+            </div>
+            <div class="row"><h4>Modèles 3D</h4></div>
+            <div class="row">
+                <input id="checkbox-bati" type="checkbox"/>
+                <label for="checkbox-bati">Bati3D (serveur IGO)</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-bati-test" type="checkbox"/>
+                <label for="checkbox-bati-test">Bati3D (test)</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-mesh" type="checkbox"/>
+                <label for="checkbox-mesh">Mesh 3D</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-mesh-igo" type="checkbox"/>
+                <label for="checkbox-mesh-igo">Mesh 3D (IGO)</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-fort" type="checkbox"/>
+                <label for="checkbox-fort">Fort Carré HD</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-tiles-parcelles" type="checkbox"/>
+                <label for="checkbox-tiles-parcelles">Parcelles (3DTiles)</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-tiles-parcelles-offset" type="range" min="1.0" max="40.0" step="1"/>
+                <label for="checkbox-tiles-parcelles-offset">Hauteur</label>
+            </div>
+            <div class="row"><h4>Vectoriel</h4></div>
+            <div class="row">
+                <input id="checkbox-contour" type="checkbox"/>
+                <label for="checkbox-contour">Limite communale</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-quartiers" type="checkbox"/>
+                <label for="checkbox-quartiers">Conseil de quartiers</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-randoxygene" type="checkbox"/>
+                <label for="checkbox-randoxygene">Randoxygène Circuit</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-monuments" type="checkbox"/>
+                <label for="checkbox-monuments">Monuments historiques</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-rues" type="checkbox"/>
+                <label for="checkbox-rues">Nom voies labels</label>
+            </div>
+            <div class="row">
+                <input id="checkbox-dalles" type="checkbox"/>
+                <label for="checkbox-dalles">Dalles</label>
+            </div>
+        </div>
+    </div>
+    <div id="main">
+		<div id="cesiumContainer">
+			<span id="openNav">&#9776;</span>
+			<div id="infos-position"></div>
+			<div id="toolbar-zoom" class="toolbar">
+				<img id="north-arrow" src=""/>
+				<div id="zoom-in">+</div>
+				<div id="zoom-out">-</div>
+			</div>
+		</div>
+		<div id="imagery-layers-dialog" title="Couches Imagerie">
+			<div id="imagery-layers">
+				<table>
+					<tbody data-bind="foreach: layers">
+					<tr data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }">
+						<td><input type="checkbox" data-bind="checked: show"></td>
+						<td class="layer-name">
+							<span data-bind="text: name, visible: !$parent.isSelectableLayer($data)"></span>
+							<select data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"></select>
+						</td>
+						<td>
+							<input type="range" min="0" max="1" step="0.1" data-bind="value: alpha, valueUpdate: 'input'">
+						</td>
+						<td>
+							<button type="button" class="cesium-button" data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())">
+								▲
+							</button>
+						</td>
+						<td>
+							<button type="button" class="cesium-button" data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())">
+								▼
+							</button>
+						</td>
+						<td>
+							<button type="button" class="cesium-button" title="Supprimer"
+								    data-bind="click: function() { $parent.remove($data, $index()); }, visible: $parent.canRemove($data)">
+								&#9587;
+							</button>
+						</td>
+						<td><input type="checkbox" data-bind="checked: imageryProvider.enablePickFeatures, enable: $parent.canQuery($data)">Query</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+            <div class="row">
+                <input type="button" class="cesium-button" id="open-wms-form" type="button" value="Ajouter une couche"/>
+            </div>
+		</div>
+    </div>
+	<div id="options-form" title="Options">
+	  <form>
+	    <fieldset>
+			<legend>Affichage</legend>
+			<div class="row">
+				<input id="checkbox-display-position" type="checkbox"/>
+				<label for="checkbox-display-position">Position caméra</label>
+			</div>
+			<div class="row">
+				<input id="checkbox-hq" type="checkbox"/>
+				<label for="checkbox-hq">FXAA (Anti-aliasing)</label>
+			</div>
+			<div class="row">
+				<input id="checkbox-depthTestAgainstTerrain" type="checkbox"/>
+				<label for="checkbox-depthTestAgainstTerrain">depthTestAgainstTerrain</label>
+			</div>
+	    </fieldset>
+	    <fieldset>
+			<legend>Debug</legend>
+			<div class="row">
+				<input id="checkbox-fps" type="checkbox"/>
+				<label for="checkbox-fps">FPS</label>
+			</div>
+			<div class="row">
+				<input id="checkbox-inspector" type="checkbox"/>
+				<label for="checkbox-inspector">Cesium Inspector</label>
+			</div>
+			<div class="row">
+				<input id="checkbox-3DTilesInspector" type="checkbox"/>
+				<label for="checkbox-3DTilesInspector">3DTiles Inspector</label>
+			</div>
+			<div class="row">
+				<input id="checkbox-display-console" type="checkbox"/>
+				<label for="checkbox-display-console">Console</label>
+			</div>
+	    </fieldset>
+	  </form>
+	</div>
+	<div id="wms-form" title="Ajouter imagerie WMS">
+	    <form>
+		    <div>
+			    <label for="wms-url">Service WMS</label>
+				<select id="wms-url" data-bind="options: optionValues, optionsValue: 'url', optionsText: 'name',value: selectedOptionValue"></select>
+			</div>
+		    <div>
+		        <label for="wms-layer">Couche</label>
+		        <select name="layer-select" id="wms-layer-select"><option value="-1">Sélectionner ...</option></select>
+			</div>
+		    <div>
+		        <input type="text" name="layer" id="wms-layer" value="" class="text ui-widget-content ui-corner-all" disabled>
+			</div>
+		    <div>
+		        <label for="wms-name">Nom</label>
+		        <input type="text" name="name" id="wms-name" value="" class="text ui-widget-content ui-corner-all">
+			</div>
+	    </form>
+	</div>
+	<!-- <script src="lib/proj4.js"></script>
+	<script src="lib/ol/ol.js"></script>
+    <script src="cesium-ui.js?20"></script> -->
+
 </body>
 </html>
